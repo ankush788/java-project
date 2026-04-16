@@ -62,8 +62,4 @@ volumes:
 
 networks:
   microservices-network:
-<<<<<<< HEAD
     driver: bridge
-=======
-    driver: bridge
->>>>>>> d6a7686a4342079ea90d64cd6e04c641f82998ca
