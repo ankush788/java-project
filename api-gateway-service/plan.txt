@@ -1,0 +1,11 @@
+JWT
+Rate limitor
+Routing Layer (Request Dispatcher)
+Load Balancer
+Logging 
+co-relation id 
+//
+(check if it fit and need or not)
+Request Transformation
+Response Transformation
+
