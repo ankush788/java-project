@@ -4,9 +4,15 @@ import com.usermanagement.dto.UpdateUserRequest;
 import com.usermanagement.dto.UserResponse;
 import com.usermanagement.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,20 +35,20 @@ public class UserController {
 
     // Get user by ID (primary way)
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable @Min(1) Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     // Get user by email (separate endpoint to avoid conflict)
     @GetMapping("/email")
-    public ResponseEntity<UserResponse> getUserByEmail(@RequestParam String email) {
+    public ResponseEntity<UserResponse> getUserByEmail(@RequestParam @Email String email) {
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     // Update user
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id,
+            @PathVariable @Min(1) Long id,
             @Valid @RequestBody UpdateUserRequest request) {
 
         return ResponseEntity.ok(userService.updateUser(id, request));
@@ -50,8 +56,13 @@ public class UserController {
 
     // Delete user
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable @Min(1) Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping("/**")
+    public void handleUnknownUserEndpoint() {
+        throw new ResponseStatusException(NOT_FOUND, "API not exist");
     }
 }

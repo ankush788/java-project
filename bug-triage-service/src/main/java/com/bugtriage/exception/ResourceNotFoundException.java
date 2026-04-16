@@ -1,11 +1,11 @@
 package com.bugtriage.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
-    public ResourceNotFoundException(String message) {
-        super(message);
-    }
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-    public ResourceNotFoundException(String message, Throwable cause) {
-        super(message, cause);
+public class ResourceNotFoundException extends ResponseStatusException {
+
+    public ResourceNotFoundException(String message) {
+        super(HttpStatus.NOT_FOUND, message);
     }
 }
