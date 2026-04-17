@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,8 +31,4 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @RequestMapping("/**")
-    public void handleAuthNotFound() {
-        throw new ResponseStatusException(NOT_FOUND, "API not exist");
-    }
 }

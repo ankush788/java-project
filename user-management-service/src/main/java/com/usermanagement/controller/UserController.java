@@ -10,9 +10,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping("/api/users")
@@ -61,8 +59,4 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping("/**")
-    public void handleUnknownUserEndpoint() {
-        throw new ResponseStatusException(NOT_FOUND, "API not exist");
-    }
 }

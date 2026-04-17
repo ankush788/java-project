@@ -16,7 +16,7 @@ curl -X GET "http://localhost:8082/api/users/email?email=user@example.com" \-H "
 ### Update User
 ```bash
 curl -X PUT "http://localhost:8082/api/users/1" \
-  -H "Content-Type: application/json" \
+-H "Content-Type: application/json" \
   -d '{
     "email" : "ankushsingh@gmail.com"
   }'

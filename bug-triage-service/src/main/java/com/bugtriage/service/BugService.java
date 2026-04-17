@@ -7,14 +7,16 @@ import com.bugtriage.dto.PageResponse;
 import com.bugtriage.dto.UpdateBugRequest;
 import com.bugtriage.entity.Bug;
 import com.bugtriage.entity.BugStatus;
-import com.bugtriage.exception.ResourceNotFoundException;
 import com.bugtriage.repository.BugRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 
 /**
  * Bug Service with Redis cache-aside pattern implementation
@@ -122,7 +124,7 @@ public class BugService {
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
                 log.warn("Bug not found with id: {}", id);
-                return new ResourceNotFoundException("Bug not found with id: " + id);
+                return new ResponseStatusException(HttpStatus.NOT_FOUND, "Bug not found with id: " + id);
             });
 
         // Step 3: Convert to response
@@ -149,7 +151,7 @@ public class BugService {
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
                 log.warn("Bug not found with id: {}", id);
-                return new ResourceNotFoundException("Bug not found with id: " + id);
+                return new ResponseStatusException(HttpStatus.NOT_FOUND, "Bug not found with id: " + id);
             });
 
         if (request.title() != null) {
@@ -187,7 +189,7 @@ public class BugService {
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
                 log.warn("Bug not found with id: {}", id);
-                return new ResourceNotFoundException("Bug not found with id: " + id);
+                return new ResponseStatusException(HttpStatus.NOT_FOUND, "Bug not found with id: " + id);
             });
 
         bugRepository.delete(bug);
