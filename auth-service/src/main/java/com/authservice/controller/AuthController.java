@@ -28,6 +28,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
+        System.out.print("this is the end");
         return ResponseEntity.ok(authService.login(request));
     }
 

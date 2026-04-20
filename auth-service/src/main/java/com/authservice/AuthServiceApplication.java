@@ -1,14 +1,11 @@
 package com.authservice;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.authservice.config.JwtProperties;
 
 @SpringBootApplication
-@EnableCaching
-@ConfigurationPropertiesScan
+@EnableConfigurationProperties(JwtProperties.class)
 public class AuthServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(AuthServiceApplication.class, args);
