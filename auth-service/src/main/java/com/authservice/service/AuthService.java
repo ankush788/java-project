@@ -6,11 +6,11 @@ import com.authservice.dto.TokenResponse;
 import com.authservice.entity.User;
 import com.authservice.repository.UserRepository;
 import com.authservice.config.JwtProperties;
+import com.authservice.utility.PasswordEncoderUtil;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,16 +22,13 @@ import java.util.Date;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
 
     public AuthService(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
             JwtProperties jwtProperties
     ) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.jwtProperties = jwtProperties;
     }
 
@@ -43,7 +40,7 @@ public class AuthService {
 
         User user = new User();
         user.setEmail(request.email().toLowerCase());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPassword(PasswordEncoderUtil.encodePassword(request.password())); // BCrypt encoded
         userRepository.save(user);
 
         return createTokenResponse(user);
@@ -53,7 +50,7 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email().toLowerCase())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (!PasswordEncoderUtil.verifyPassword(request.password(), user.getPassword())) { // BCrypt verification
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
