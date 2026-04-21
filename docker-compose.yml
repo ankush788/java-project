@@ -1,4 +1,15 @@
 services:
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+    restart: on-failure
+
   postgres:
     image: postgres:13
     container_name: postgres
@@ -34,6 +45,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
+      - eureka-server
       - postgres
       - redis
     networks:
@@ -50,8 +62,44 @@ services:
     ports:
       - "8083:8083"
     depends_on:
+      - eureka-server
       - postgres
       - redis
+    networks:
+      - microservices-network
+    restart: on-failure
+
+  bug-triage-service:
+    build:
+      context: ./bug-triage-service
+      dockerfile: Dockerfile
+    container_name: bug-triage-service
+    env_file:
+      - ./.env
+    ports:
+      - "8082:8082"
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+    networks:
+      - microservices-network
+    restart: on-failure
+
+  api-gateway-service:
+    build:
+      context: ./api-gateway-service
+      dockerfile: Dockerfile
+    container_name: api-gateway-service
+    env_file:
+      - ./.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - auth-service
+      - user-management-service
+      - bug-triage-service
     networks:
       - microservices-network
     restart: on-failure
