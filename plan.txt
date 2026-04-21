@@ -1,1 +1,7 @@
-cloud , aws 
+1. postgress driver , other jo undifne aa rha hai vo
+2. load balancer
+3. kafka setup
+4. rag
+// understand code (acche se (basic acche se clear hona chahiye) + document bana hai)
+multi threading  + dsa(always parallel)
+//isko acche karne ke baad hi sochna hai 

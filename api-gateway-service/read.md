@@ -52,7 +52,7 @@ TOKEN="<JWT_TOKEN>"
 
 ### Get All Users
 ```bash
-curl -X GET "http://localhost:8080/user/api/users?page=0&size=10" \
+curl -X GET "http://localhost:8080/api/users?page=0&size=10" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
