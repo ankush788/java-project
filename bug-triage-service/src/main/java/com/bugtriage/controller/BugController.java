@@ -18,11 +18,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bugs")
@@ -37,49 +41,61 @@ public class BugController {
     }
 
     @PostMapping
-    public ResponseEntity<BugResponse> createBug(@Valid @RequestBody CreateBugRequest request) {
-        log.info("POST /api/bugs - Creating new bug");
-        BugResponse response = bugService.createBug(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ResponseEntity<Map<String, Object>> createBug(@RequestHeader("X-Correlation-ID") String correlationId,
+                                                         @Valid @RequestBody CreateBugRequest request) {
+        log.info("correlationId: {} - POST /api/bugs - Creating new bug", correlationId);
+        BugResponse response = bugService.createBug(correlationId, request);
+        return new ResponseEntity<>(withCorrelationId(correlationId, response), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<BugResponse>> getAllBugs(
+    public ResponseEntity<Map<String, Object>> getAllBugs(
+            @RequestHeader("X-Correlation-ID") String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("GET /api/bugs - Fetching bugs with page: {}, size: {}", page, size);
+        log.info("correlationId: {} - GET /api/bugs - Fetching bugs with page: {}, size: {}", correlationId, page, size);
 
         Pageable pageable = PageRequest.of(page, size);
-        PageResponse<BugResponse> response = bugService.getAllBugs(pageable);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        PageResponse<BugResponse> response = bugService.getAllBugs(correlationId, pageable);
+        return new ResponseEntity<>(withCorrelationId(correlationId, response), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BugResponse> getBugById(@PathVariable Long id) {
-        log.info("GET /api/bugs/{} - Fetching bug", id);
-        BugResponse response = bugService.getBugById(id);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public ResponseEntity<Map<String, Object>> getBugById(@RequestHeader("X-Correlation-ID") String correlationId,
+                                                          @PathVariable Long id) {
+        log.info("correlationId: {} - GET /api/bugs/{} - Fetching bug", correlationId, id);
+        BugResponse response = bugService.getBugById(correlationId, id);
+        return new ResponseEntity<>(withCorrelationId(correlationId, response), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BugResponse> updateBug(
+    public ResponseEntity<Map<String, Object>> updateBug(
+            @RequestHeader("X-Correlation-ID") String correlationId,
             @PathVariable Long id,
             @Valid @RequestBody UpdateBugRequest request) {
-        log.info("PUT /api/bugs/{} - Updating bug", id);
-        BugResponse response = bugService.updateBug(id, request);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        log.info("correlationId: {} - PUT /api/bugs/{} - Updating bug", correlationId, id);
+        BugResponse response = bugService.updateBug(correlationId, id, request);
+        return new ResponseEntity<>(withCorrelationId(correlationId, response), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBug(@PathVariable Long id) {
-        log.info("DELETE /api/bugs/{} - Deleting bug", id);
-        bugService.deleteBug(id);
+    public ResponseEntity<Map<String, Object>> deleteBug(@RequestHeader("X-Correlation-ID") String correlationId,
+                                                         @PathVariable Long id) {
+        log.info("correlationId: {} - DELETE /api/bugs/{} - Deleting bug", correlationId, id);
+        bugService.deleteBug(correlationId, id);
 
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(withCorrelationId(correlationId, Map.of("message", "Bug deleted successfully")), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS, RequestMethod.HEAD})
     public void handleUnknownBugEndpoint() {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "API not exist");
+    }
+
+    private Map<String, Object> withCorrelationId(String correlationId, Object response) {
+        Map<String, Object> wrappedResponse = new LinkedHashMap<>();
+        wrappedResponse.put("correlationId", correlationId);
+        wrappedResponse.put("data", response);
+        return wrappedResponse;
     }
 }

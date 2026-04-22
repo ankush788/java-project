@@ -49,8 +49,8 @@ public class BugService {
      * @param request the create bug request
      * @return the created bug response
      */
-    public BugResponse createBug(CreateBugRequest request) {
-        log.info("Creating new bug with title: {}", request.title());
+    public BugResponse createBug(String correlationId, CreateBugRequest request) {
+        log.info("correlationId: {} - Creating new bug with title: {}", correlationId, request.title());
 
         Bug bug = Bug.builder()
             .title(request.title())
@@ -60,12 +60,12 @@ public class BugService {
             .build();
 
         Bug saved = bugRepository.save(bug);
-        log.info("Bug created successfully with id: {}", saved.getId());
+        log.info("correlationId: {} - Bug created successfully with id: {}", correlationId, saved.getId());
 
         BugResponse response = mapToResponse(saved);
 
         // Cache the newly created bug for potential immediate access
-        cacheManager.cacheBug(response.id(), response);
+        cacheManager.cacheBug(correlationId, response.id(), response);
 
         return response;
     }
@@ -78,8 +78,8 @@ public class BugService {
      * @return paginated bug responses
      */
     @Transactional(readOnly = true)
-    public PageResponse<BugResponse> getAllBugs(Pageable pageable) {
-        log.info("Fetching bugs with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+    public PageResponse<BugResponse> getAllBugs(String correlationId, Pageable pageable) {
+        log.info("correlationId: {} - Fetching bugs with page: {}, size: {}", correlationId, pageable.getPageNumber(), pageable.getPageSize());
 
         Page<Bug> page = bugRepository.findAll(pageable);
 
@@ -92,7 +92,7 @@ public class BugService {
             page.isLast()
         );
 
-        log.info("Fetched {} bugs", page.getContent().size());
+        log.info("correlationId: {} - Fetched {} bugs", correlationId, page.getContent().size());
         return response;
     }
 
@@ -110,20 +110,28 @@ public class BugService {
      * @throws ResourceNotFoundException if bug not found
      */
     @Transactional(readOnly = true)
-    public BugResponse getBugById(Long id) {
-        log.info("Fetching bug with id: {}", id);
+    public BugResponse getBugById(String correlationId, Long id) {
+        log.info("correlationId: {} - Fetching bug with id: {}", correlationId, id);
 
         // Step 1: Try to get from cache
-        BugResponse cachedResponse = cacheManager.getCachedBug(id, BugResponse.class);
+        BugResponse cachedResponse = cacheManager.getCachedBug(correlationId, id, BugResponse.class);
         if (cachedResponse != null) {
-            log.info("Bug retrieved from cache - id: {}", id);
-            return cachedResponse;
+            log.info("correlationId: {} - Bug retrieved from cache - id: {}", correlationId, id);
+            return new BugResponse(
+                cachedResponse.id(),
+                cachedResponse.title(),
+                cachedResponse.description(),
+                cachedResponse.status(),
+                cachedResponse.severity(),
+                cachedResponse.createdAt(),
+                cachedResponse.updatedAt()
+            );
         }
 
         // Step 2: Cache miss - fetch from database
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
-                log.warn("Bug not found with id: {}", id);
+                log.warn("correlationId: {} - Bug not found with id: {}", correlationId, id);
                 return new ResponseStatusException(HttpStatus.NOT_FOUND, "Bug not found with id: " + id);
             });
 
@@ -131,8 +139,8 @@ public class BugService {
         BugResponse response = mapToResponse(bug);
 
         // Step 4: Store in cache
-        cacheManager.cacheBug(id, response);
-        log.info("Bug cached after database fetch - id: {}", id);
+        cacheManager.cacheBug(correlationId, id, response);
+        log.info("correlationId: {} - Bug cached after database fetch - id: {}", correlationId, id);
 
         return response;
     }
@@ -145,12 +153,12 @@ public class BugService {
      * @return the updated bug response
      * @throws ResourceNotFoundException if bug not found
      */
-    public BugResponse updateBug(Long id, UpdateBugRequest request) {
-        log.info("Updating bug with id: {}", id);
+    public BugResponse updateBug(String correlationId, Long id, UpdateBugRequest request) {
+        log.info("correlationId: {} - Updating bug with id: {}", correlationId, id);
 
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
-                log.warn("Bug not found with id: {}", id);
+                log.warn("correlationId: {} - Bug not found with id: {}", correlationId, id);
                 return new ResponseStatusException(HttpStatus.NOT_FOUND, "Bug not found with id: " + id);
             });
 
@@ -168,11 +176,11 @@ public class BugService {
         }
 
         Bug updated = bugRepository.save(bug);
-        log.info("Bug updated successfully with id: {}", id);
+        log.info("correlationId: {} - Bug updated successfully with id: {}", correlationId, id);
 
         // Invalidate cache after update
-        cacheManager.invalidateBugCache(id);
-        log.info("Cache invalidated for updated bug - id: {}", id);
+        cacheManager.invalidateBugCache(correlationId, id);
+        log.info("correlationId: {} - Cache invalidated for updated bug - id: {}", correlationId, id);
 
         return mapToResponse(updated);
     }
@@ -183,21 +191,21 @@ public class BugService {
      * @param id the bug ID
      * @throws ResourceNotFoundException if bug not found
      */
-    public void deleteBug(Long id) {
-        log.info("Deleting bug with id: {}", id);
+    public void deleteBug(String correlationId, Long id) {
+        log.info("correlationId: {} - Deleting bug with id: {}", correlationId, id);
 
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
-                log.warn("Bug not found with id: {}", id);
+                log.warn("correlationId: {} - Bug not found with id: {}", correlationId, id);
                 return new ResponseStatusException(HttpStatus.NOT_FOUND, "Bug not found with id: " + id);
             });
 
         bugRepository.delete(bug);
-        log.info("Bug deleted successfully with id: {}", id);
+        log.info("correlationId: {} - Bug deleted successfully with id: {}", correlationId, id);
 
         // Invalidate cache after delete
-        cacheManager.invalidateBugCache(id);
-        log.info("Cache invalidated for deleted bug - id: {}", id);
+        cacheManager.invalidateBugCache(correlationId, id);
+        log.info("correlationId: {} - Cache invalidated for deleted bug - id: {}", correlationId, id);
     }
 
     /**
@@ -218,4 +226,3 @@ public class BugService {
         );
     }
 }
-

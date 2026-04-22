@@ -42,17 +42,17 @@ public class CacheManager {
      * @param <T> generic type
      * @return cached object or null if not found
      */
-    public <T> T getCachedBug(Long bugId, Class<T> valueType) {
+    public <T> T getCachedBug(String correlationId, Long bugId, Class<T> valueType) {
         String cacheKey = generateCacheKey(bugId);
         try {
             Object cachedValue = redisTemplate.opsForValue().get(cacheKey);
             if (cachedValue != null) {
-                log.debug("Cache HIT for bug ID: {}", bugId);
+                log.debug("correlationId: {} - Cache HIT for bug ID: {}", correlationId, bugId);
                 return valueType.cast(cachedValue);
             }
-            log.debug("Cache MISS for bug ID: {}", bugId);
+            log.debug("correlationId: {} - Cache MISS for bug ID: {}", correlationId, bugId);
         } catch (Exception e) {
-            log.warn("Error retrieving cache for bug ID: {}", bugId, e);
+            log.warn("correlationId: {} - Error retrieving cache for bug ID: {}", correlationId, bugId, e);
         }
         return null;
     }
@@ -63,13 +63,13 @@ public class CacheManager {
      * @param bugId the bug ID
      * @param value the bug object to cache
      */
-    public void cacheBug(Long bugId, Object value) {
+    public void cacheBug(String correlationId, Long bugId, Object value) {
         String cacheKey = generateCacheKey(bugId);
         try {
             redisTemplate.opsForValue().set(cacheKey, value, DEFAULT_CACHE_TTL, TimeUnit.SECONDS);
-            log.debug("Cached bug ID: {} with TTL: {} seconds", bugId, DEFAULT_CACHE_TTL);
+            log.debug("correlationId: {} - Cached bug ID: {} with TTL: {} seconds", correlationId, bugId, DEFAULT_CACHE_TTL);
         } catch (Exception e) {
-            log.warn("Error caching bug ID: {}", bugId, e);
+            log.warn("correlationId: {} - Error caching bug ID: {}", correlationId, bugId, e);
         }
     }
 
@@ -79,13 +79,13 @@ public class CacheManager {
      * 
      * @param bugId the bug ID
      */
-    public void invalidateBugCache(Long bugId) {
+    public void invalidateBugCache(String correlationId, Long bugId) {
         String cacheKey = generateCacheKey(bugId);
         try {
             Boolean deleted = redisTemplate.delete(cacheKey);
-            log.debug("Cache invalidated for bug ID: {} - deleted: {}", bugId, deleted);
+            log.debug("correlationId: {} - Cache invalidated for bug ID: {} - deleted: {}", correlationId, bugId, deleted);
         } catch (Exception e) {
-            log.warn("Error invalidating cache for bug ID: {}", bugId, e);
+            log.warn("correlationId: {} - Error invalidating cache for bug ID: {}", correlationId, bugId, e);
         }
     }
 
