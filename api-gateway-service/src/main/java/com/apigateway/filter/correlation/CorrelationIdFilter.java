@@ -16,12 +16,21 @@ public class CorrelationIdFilter implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        String correlationId = UUID.randomUUID().toString();
+        String incomingCorrelationId = exchange.getRequest().getHeaders().getFirst(CORRELATION_ID_HEADER);
+        String correlationId = (incomingCorrelationId == null || incomingCorrelationId.isBlank())
+                ? UUID.randomUUID().toString()
+                : incomingCorrelationId;
 
         ServerHttpRequest request = exchange.getRequest()
                 .mutate()
                 .headers(headers -> headers.set(CORRELATION_ID_HEADER, correlationId))
                 .build();
+
+        exchange.getResponse().beforeCommit(() -> {
+            exchange.getResponse().getHeaders().remove(CORRELATION_ID_HEADER);
+            exchange.getResponse().getHeaders().set(CORRELATION_ID_HEADER, correlationId);
+            return Mono.empty();
+        });
 
         return chain.filter(exchange.mutate().request(request).build());
     }

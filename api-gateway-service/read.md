@@ -1,6 +1,5 @@
 # API Gateway Curl Reference
 
-eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidXNlckVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsImlhdCI6MTc3NjgwMzcxOCwiZXhwIjoxNzc2ODA0NjE4fQ.8Va7r802U33rrMXrm8Bfg2eym9GwMNRi58HobW2njDg
 ## Base URL
 
 ```bash

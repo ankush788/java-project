@@ -1,0 +1,35 @@
+# for running server locally:-
+cd "d:\Ankush Files\Java\java-project-master"
+.\start-all-services.ps1
+
+
+# View all running jobs
+Get-Job
+
+# Stop a specific service
+Stop-Job -Name auth-service
+
+# Stop all services
+Stop-Job -State Running
+
+
+## Running the Service with Docker 
+# through script
+cd "d:\Ankush Files\Java\java-project-master"
+.\start-docker-services.ps1
+
+# manually
+ Build the JAR files for the services:
+   ```
+   cd auth-service
+   mvn clean package -DskipTests
+   cd ../user-management-service
+   mvn clean package -DskipTests
+   cd ..
+
+   ```
+ Build the Docker images:
+   ```
+   docker compose build --no-cache
+   docker compose up -d
+   ```
