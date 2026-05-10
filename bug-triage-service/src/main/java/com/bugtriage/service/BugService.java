@@ -70,14 +70,7 @@ public class BugService {
         return response;
     }
 
-    /**
-     * Get all bugs with pagination
-     * NOT cached as this endpoint frequently changes due to CRUD operations
-     * 
-     * @param pageable pagination information
-     * @return paginated bug responses
-     */
-    @Transactional(readOnly = true)
+   // not cache used 
     public PageResponse<BugResponse> getAllBugs(String correlationId, Pageable pageable) {
         log.info("correlationId: {} - Fetching bugs with page: {}, size: {}", correlationId, pageable.getPageNumber(), pageable.getPageSize());
 
@@ -96,20 +89,7 @@ public class BugService {
         return response;
     }
 
-    /**
-     * Get bug by ID using cache-aside pattern
-     * 
-     * Cache-aside flow:
-     * 1. Try to get from cache (Redis)
-     * 2. If cache miss, fetch from database
-     * 3. Store in cache with TTL
-     * 4. Return the data
-     * 
-     * @param id the bug ID
-     * @return the bug response
-     * @throws ResourceNotFoundException if bug not found
-     */
-    @Transactional(readOnly = true)
+
     public BugResponse getBugById(String correlationId, Long id) {
         log.info("correlationId: {} - Fetching bug with id: {}", correlationId, id);
 
@@ -145,17 +125,8 @@ public class BugService {
         return response;
     }
 
-    /**
-     * Update an existing bug and invalidate cache
-     * 
-     * @param id the bug ID
-     * @param request the update bug request
-     * @return the updated bug response
-     * @throws ResourceNotFoundException if bug not found
-     */
     public BugResponse updateBug(String correlationId, Long id, UpdateBugRequest request) {
         log.info("correlationId: {} - Updating bug with id: {}", correlationId, id);
-
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
                 log.warn("correlationId: {} - Bug not found with id: {}", correlationId, id);
@@ -185,12 +156,6 @@ public class BugService {
         return mapToResponse(updated);
     }
 
-    /**
-     * Delete a bug and invalidate cache
-     * 
-     * @param id the bug ID
-     * @throws ResourceNotFoundException if bug not found
-     */
     public void deleteBug(String correlationId, Long id) {
         log.info("correlationId: {} - Deleting bug with id: {}", correlationId, id);
 
@@ -208,12 +173,6 @@ public class BugService {
         log.info("correlationId: {} - Cache invalidated for deleted bug - id: {}", correlationId, id);
     }
 
-    /**
-     * Map Bug entity to BugResponse DTO
-     * 
-     * @param bug the bug entity
-     * @return the bug response DTO
-     */
     private BugResponse mapToResponse(Bug bug) {
         return new BugResponse(
             bug.getId(),

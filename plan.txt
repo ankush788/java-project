@@ -5,3 +5,17 @@
 // understand code (acche se (basic acche se clear hona chahiye) + document bana hai)
 multi threading  + dsa(always parallel)
 //isko acche karne ke baad hi sochna hai 
+
+
+overview :
+1: auth service (email , password ) : register , login 
+2: bug service :
+    createBug , getAllBugs , getBugById , updateBug(by id) , deletebug(by id) 
+3. user managment 
+   getAllUsers , getUserById , getUserByEmail , updateUser(only by id) , deleteUser(only by id)
+
+// work pending
+// add redis properly in auth service 
+// all cache class to userCache like  class   
+// covert redis template bug triage like userManagment
+// update me cache to find bug by id  bug triag , user managment

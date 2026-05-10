@@ -96,7 +96,6 @@ public class UserService {
 
         userCacheManager.evictCache(correlationId, originalEmail, id);
         UserResponse userResponse = mapToUserResponse(user);
-        userCacheManager.cacheUser(correlationId, userResponse);
         return userResponse;
     }
 

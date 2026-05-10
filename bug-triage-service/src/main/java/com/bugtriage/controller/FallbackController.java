@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -29,7 +28,7 @@ public class FallbackController {
             RequestMethod.PATCH,
             RequestMethod.OPTIONS,
             RequestMethod.HEAD
-    }, produces = MediaType.APPLICATION_JSON_VALUE)
+    })
     public ResponseEntity<Map<String, Object>> handleUnknownEndpoint(HttpServletRequest request) {
         String correlationId = request.getHeader("X-Correlation-ID");
         log.warn("correlationId: {} - Unknown bug triage API endpoint requested", correlationId);

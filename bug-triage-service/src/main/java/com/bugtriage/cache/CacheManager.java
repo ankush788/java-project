@@ -34,14 +34,6 @@ public class CacheManager {
         this.redisTemplate = redisTemplate;
     }
 
-    /**
-     * Get cached bug by ID
-     * 
-     * @param bugId the bug ID
-     * @param valueType the class type to deserialize to
-     * @param <T> generic type
-     * @return cached object or null if not found
-     */
     public <T> T getCachedBug(String correlationId, Long bugId, Class<T> valueType) {
         String cacheKey = generateCacheKey(bugId);
         try {
@@ -57,12 +49,7 @@ public class CacheManager {
         return null;
     }
 
-    /**
-     * Cache a bug object
-     * 
-     * @param bugId the bug ID
-     * @param value the bug object to cache
-     */
+  
     public void cacheBug(String correlationId, Long bugId, Object value) {
         String cacheKey = generateCacheKey(bugId);
         try {
@@ -73,12 +60,7 @@ public class CacheManager {
         }
     }
 
-    /**
-     * Invalidate cache for a specific bug
-     * Used when bug is updated or deleted
-     * 
-     * @param bugId the bug ID
-     */
+  
     public void invalidateBugCache(String correlationId, Long bugId) {
         String cacheKey = generateCacheKey(bugId);
         try {
@@ -89,13 +71,6 @@ public class CacheManager {
         }
     }
 
-    /**
-     * Generate cache key for a bug ID
-     * Cache key format: bug:{bugId}
-     * 
-     * @param bugId the bug ID
-     * @return the cache key
-     */
     private String generateCacheKey(Long bugId) {
         return BUG_CACHE_KEY_PREFIX + bugId;
     }
