@@ -1,8 +1,8 @@
 package com.usermanagement.service;
 
+import com.usermanagement.cache.UserCacheManager;
 import com.usermanagement.dto.UpdateUserRequest;
 import com.usermanagement.dto.UserResponse;
-import com.usermanagement.caching.UserCacheManager;
 import com.usermanagement.entity.User;
 import com.usermanagement.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -83,6 +83,15 @@ public class UserService {
     // cann't use email for "find" or "delete" api becuase email can be updated (so,mutable )
     public UserResponse updateUser(String correlationId, Long id, UpdateUserRequest request) {
         log.info("correlationId: {} - Updating user with id: {}", correlationId, id);
+
+        // Check cache first to find user by id
+        UserResponse cachedUser = userCacheManager.getCachedUserById(correlationId, id);
+        if (cachedUser != null) {
+            log.debug("correlationId: {} - User found in cache for update - id: {}", correlationId, id);
+        } else {
+            log.debug("correlationId: {} - User not in cache, fetching from DB for update - id: {}", correlationId, id);
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("correlationId: {} - User not found with id: {}", correlationId, id);

@@ -18,4 +18,4 @@ overview :
 // add redis properly in auth service 
 // all cache class to userCache like  class   
 // covert redis template bug triage like userManagment
-// update me cache to find bug by id  bug triag , user managment
+// added cache to find bug by id in update functions for bug triag and user managment

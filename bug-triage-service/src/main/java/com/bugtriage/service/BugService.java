@@ -1,6 +1,6 @@
 package com.bugtriage.service;
 
-import com.bugtriage.cache.CacheManager;
+import com.bugtriage.cache.BugCacheManager;
 import com.bugtriage.dto.CreateBugRequest;
 import com.bugtriage.dto.BugResponse;
 import com.bugtriage.dto.PageResponse;
@@ -35,9 +35,9 @@ public class BugService {
     private static final Logger log = LoggerFactory.getLogger(BugService.class);
 
     private final BugRepository bugRepository;
-    private final CacheManager cacheManager;
+    private final BugCacheManager cacheManager;
 
-    public BugService(BugRepository bugRepository, CacheManager cacheManager) {
+    public BugService(BugRepository bugRepository, BugCacheManager cacheManager) {
         this.bugRepository = bugRepository;
         this.cacheManager = cacheManager;
     }
@@ -94,7 +94,7 @@ public class BugService {
         log.info("correlationId: {} - Fetching bug with id: {}", correlationId, id);
 
         // Step 1: Try to get from cache
-        BugResponse cachedResponse = cacheManager.getCachedBug(correlationId, id, BugResponse.class);
+        BugResponse cachedResponse = cacheManager.getCachedBug(correlationId, id);
         if (cachedResponse != null) {
             log.info("correlationId: {} - Bug retrieved from cache - id: {}", correlationId, id);
             return new BugResponse(
@@ -127,6 +127,15 @@ public class BugService {
 
     public BugResponse updateBug(String correlationId, Long id, UpdateBugRequest request) {
         log.info("correlationId: {} - Updating bug with id: {}", correlationId, id);
+
+        // Check cache first to find bug by id
+        BugResponse cachedResponse = cacheManager.getCachedBug(correlationId, id);
+        if (cachedResponse != null) {
+            log.debug("correlationId: {} - Bug found in cache for update - id: {}", correlationId, id);
+        } else {
+            log.debug("correlationId: {} - Bug not in cache, fetching from DB for update - id: {}", correlationId, id);
+        }
+
         Bug bug = bugRepository.findById(id)
             .orElseThrow(() -> {
                 log.warn("correlationId: {} - Bug not found with id: {}", correlationId, id);

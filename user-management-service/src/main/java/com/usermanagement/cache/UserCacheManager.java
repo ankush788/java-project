@@ -1,4 +1,4 @@
-package com.usermanagement.caching;
+package com.usermanagement.cache;
 
 import com.usermanagement.dto.UserResponse;
 import org.slf4j.Logger;

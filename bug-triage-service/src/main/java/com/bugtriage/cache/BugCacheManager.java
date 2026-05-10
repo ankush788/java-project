@@ -1,5 +1,6 @@
 package com.bugtriage.cache;
 
+import com.bugtriage.dto.BugResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
@@ -18,11 +19,11 @@ import java.util.concurrent.TimeUnit;
  * 5. Return data
  */
 @Component
-public class CacheManager {
+public class BugCacheManager {
 
-    private static final Logger log = LoggerFactory.getLogger(CacheManager.class);
+    private static final Logger log = LoggerFactory.getLogger(BugCacheManager.class);
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, BugResponse> redisTemplate;
 
     // Cache key prefix for bugs
     private static final String BUG_CACHE_KEY_PREFIX = "bug:";
@@ -30,17 +31,17 @@ public class CacheManager {
     // Default cache TTL: 1 hour (3600 seconds)
     private static final long DEFAULT_CACHE_TTL = 3600;
 
-    public CacheManager(RedisTemplate<String, Object> redisTemplate) {
+    public BugCacheManager(RedisTemplate<String, BugResponse> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
-    public <T> T getCachedBug(String correlationId, Long bugId, Class<T> valueType) {
+    public BugResponse getCachedBug(String correlationId, Long bugId) {
         String cacheKey = generateCacheKey(bugId);
         try {
-            Object cachedValue = redisTemplate.opsForValue().get(cacheKey);
+            BugResponse cachedValue = redisTemplate.opsForValue().get(cacheKey);
             if (cachedValue != null) {
                 log.debug("correlationId: {} - Cache HIT for bug ID: {}", correlationId, bugId);
-                return valueType.cast(cachedValue);
+                return cachedValue;
             }
             log.debug("correlationId: {} - Cache MISS for bug ID: {}", correlationId, bugId);
         } catch (Exception e) {
@@ -50,7 +51,7 @@ public class CacheManager {
     }
 
   
-    public void cacheBug(String correlationId, Long bugId, Object value) {
+    public void cacheBug(String correlationId, Long bugId, BugResponse value) {
         String cacheKey = generateCacheKey(bugId);
         try {
             redisTemplate.opsForValue().set(cacheKey, value, DEFAULT_CACHE_TTL, TimeUnit.SECONDS);

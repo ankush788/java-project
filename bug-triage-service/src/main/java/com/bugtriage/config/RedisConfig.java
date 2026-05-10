@@ -1,5 +1,6 @@
 package com.bugtriage.config;
 
+import com.bugtriage.dto.BugResponse;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,58 +17,34 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    /**
-     * Redis template for general purpose caching with String key and Object value
-     */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-
-       
-         // Configure ObjectMapper
+    public ObjectMapper objectMapper() {
         ObjectMapper om = new ObjectMapper();
-        om.registerModule(new JavaTimeModule()); // ✅ Fix for LocalDateTime
-        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Dates will be stored as readable string
-        // in java time can be store as readable formatt or number
-
+        om.registerModule(new JavaTimeModule());
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // Allows Jackson to access all fields (even private)
-
         om.activateDefaultTyping(
             LaissezFaireSubTypeValidator.instance,
             ObjectMapper.DefaultTyping.NON_FINAL
         );
-        //Adds class/type info in JSON
-        //Helps in converting JSON back to correct object     
+        return om;
+    }
 
-        // ✅ value serializer 
-        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
-            new Jackson2JsonRedisSerializer<>(om, Object.class);
+    @Bean
+    public RedisTemplate<String, BugResponse> redisTemplate(
+            RedisConnectionFactory connectionFactory,
+            ObjectMapper objectMapper
+    ) {
+        RedisTemplate<String, BugResponse> template = new RedisTemplate<>();
+        Jackson2JsonRedisSerializer<BugResponse> valueSerializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, BugResponse.class);
 
-        // Key serializer
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-
-        // Set serializers for string keys and JSON values
-        template.setKeySerializer(stringRedisSerializer);
-        template.setValueSerializer(jackson2JsonRedisSerializer);
-
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(valueSerializer);
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(valueSerializer);
         template.afterPropertiesSet();
         return template;
     }
 }
-
-
-
-  /*
-        ObjectMapper
-        → converts data structure → another structure 
-        (while converting you can apply rules (this field) in result structure)
-        (object ⇄ JSON ⇄ object, object ⇄ object)
-        
-        Serializer
-        → converts data → storable/transferable format (byte[])
-
-        ->some time serializer internally use Mapper. 
-
-*/
