@@ -20,14 +20,6 @@ public class GatewayController {
         this.jwtTokenUtil = jwtTokenUtil;
     }
 
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "UP");
-        response.put("service", "API Gateway Service");
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping("/validate-token")
     public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String authHeader) {
         try {

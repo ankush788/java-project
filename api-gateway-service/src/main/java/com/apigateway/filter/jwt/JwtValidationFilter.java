@@ -26,11 +26,16 @@ public class JwtValidationFilter extends AbstractGatewayFilterFactory<JwtValidat
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             try {
+                String correlationId = exchange.getRequest().getHeaders().getFirst("X-Correlation-ID");
+                String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+                String path = exchange.getRequest().getPath().value();
                 String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
+                log.info("correlationId: {} - [JWT VALIDATION] {} {} - Processing JWT token", correlationId, method, path);
+
                 if (authHeader == null || authHeader.isEmpty()) {
-                    log.warn("Missing authorization header");
-                    return handleUnauthorized(exchange, "Missing authorization header");
+                    log.warn("correlationId: {} - [JWT VALIDATION] {} {} - Missing authorization header", correlationId, method, path);
+                    return handleUnauthorized(exchange, "Missing authorization header", correlationId);
                 }
 
                 String token = jwtTokenUtil.extractToken(authHeader);
@@ -41,19 +46,23 @@ public class JwtValidationFilter extends AbstractGatewayFilterFactory<JwtValidat
                 exchange.getAttributes().put("userId", userId);
                 exchange.getAttributes().put("claims", claims);
 
-                log.debug("JWT token validated successfully for userId: {}", userId);
+                log.info("correlationId: {} - [JWT VALIDATION] {} {} - Token validated successfully for userId: {}", correlationId, method, path, userId);
 
                 return chain.filter(exchange);
 
             } catch (Exception e) {
-                log.error("JWT validation failed: {}", e.getMessage());
-                return handleUnauthorized(exchange, e.getMessage());
+                String correlationId = exchange.getRequest().getHeaders().getFirst("X-Correlation-ID");
+                String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+                String path = exchange.getRequest().getPath().value();
+                log.error("correlationId: {} - [JWT VALIDATION] {} {} - JWT validation failed: {}", correlationId, method, path, e.getMessage());
+                return handleUnauthorized(exchange, e.getMessage(), correlationId);
             }
         };
     }
 
-    private Mono<Void> handleUnauthorized(ServerWebExchange exchange, String message) {
+    private Mono<Void> handleUnauthorized(ServerWebExchange exchange, String message, String correlationId) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        log.warn("correlationId: {} - [JWT REJECTION] Returning 401 Unauthorized - {}", correlationId, message);
         return exchange.getResponse().writeWith(
                 Mono.just(exchange.getResponse().bufferFactory().wrap(
                         ("{ \"error\": \"" + message + "\" }").getBytes()

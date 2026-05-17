@@ -23,12 +23,18 @@ public class RateLimiterFilter extends AbstractGatewayFilterFactory<RateLimiterF
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             try {
+                String correlationId = exchange.getRequest().getHeaders().getFirst("X-Correlation-ID");
+                String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+                String path = exchange.getRequest().getPath().value();
                 String userId = (String) exchange.getAttribute("userId");
                 
                 if (userId == null) {
                     userId = exchange.getRequest().getRemoteAddress() != null ? 
                             exchange.getRequest().getRemoteAddress().getAddress().getHostAddress() : "unknown";
                 }
+
+                log.info("correlationId: {} - [RATE LIMIT CHECK] {} {} - userId: {}, capacity: {}", 
+                        correlationId, method, path, userId, config.getCapacity());
 
                 boolean allowed = rateLimiter.allowRequest(
                         userId,
@@ -42,22 +48,27 @@ public class RateLimiterFilter extends AbstractGatewayFilterFactory<RateLimiterF
                     exchange.getResponse().getHeaders().add("X-RateLimit-Remaining", String.valueOf(remainingTokens));
                     exchange.getResponse().getHeaders().add("X-RateLimit-Capacity", String.valueOf(config.getCapacity()));
                     
-                    log.debug("Rate limit check passed for userId: {}, remaining tokens: {}", userId, remainingTokens);
+                    log.info("correlationId: {} - [RATE LIMIT PASSED] {} {} - userId: {}, remaining tokens: {}", 
+                            correlationId, method, path, userId, remainingTokens);
                     return chain.filter(exchange);
                 } else {
-                    return handleRateLimitExceeded(exchange);
+                    log.warn("correlationId: {} - [RATE LIMIT EXCEEDED] {} {} - userId: {}", 
+                            correlationId, method, path, userId);
+                    return handleRateLimitExceeded(exchange, correlationId);
                 }
 
             } catch (Exception e) {
-                log.error("Error during rate limit check: {}", e.getMessage());
+                String correlationId = exchange.getRequest().getHeaders().getFirst("X-Correlation-ID");
+                log.error("correlationId: {} - [RATE LIMIT ERROR] Error during rate limit check: {}", correlationId, e.getMessage(), e);
                 return chain.filter(exchange);
             }
         };
     }
 
-    private Mono<Void> handleRateLimitExceeded(ServerWebExchange exchange) {
+    private Mono<Void> handleRateLimitExceeded(ServerWebExchange exchange, String correlationId) {
         exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
         exchange.getResponse().getHeaders().add("X-RateLimit-Retry-After", "1");
+        log.warn("correlationId: {} - [RATE LIMIT REJECTION] Returning 429 Too Many Requests", correlationId);
         return exchange.getResponse().writeWith(
                 Mono.just(exchange.getResponse().bufferFactory().wrap(
                         ("{ \"error\": \"Rate limit exceeded. Please try again later.\" }").getBytes()

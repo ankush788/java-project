@@ -8,8 +8,7 @@ import com.bugtriage.dto.UpdateBugRequest;
 import com.bugtriage.entity.Bug;
 import com.bugtriage.entity.BugStatus;
 import com.bugtriage.repository.BugRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -28,11 +27,10 @@ import org.springframework.web.server.ResponseStatusException;
  * - updateBug: Invalidates cache after update
  * - deleteBug: Invalidates cache after delete
  */
+@Slf4j
 @Service
 @Transactional
 public class BugService {
-
-    private static final Logger log = LoggerFactory.getLogger(BugService.class);
 
     private final BugRepository bugRepository;
     private final BugCacheManager cacheManager;

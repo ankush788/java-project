@@ -1,18 +1,16 @@
 package com.usermanagement.cache;
 
 import com.usermanagement.dto.UserResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 public class UserCacheManager {
-
-    private static final Logger log = LoggerFactory.getLogger(UserCacheManager.class);
 
     private final RedisTemplate<String, UserResponse> redisTemplate;
     private static final String USER_CACHE_KEY_PREFIX = "user:id:";

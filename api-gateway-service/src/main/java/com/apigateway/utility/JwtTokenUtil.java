@@ -2,8 +2,8 @@ package com.apigateway.utility;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import com.apigateway.config.JwtProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -16,11 +16,13 @@ import java.util.Map;
 @Component
 public class JwtTokenUtil {
 
-    @Value("${jwt.secret:mySuperSecretKeyForJwtTokenValidationInApiGatewayServiceWithMinimum256Bits}")
-    private String secretKey;
+    private final String secretKey;
+    private final long tokenExpiration;
 
-    @Value("${jwt.expiration:86400000}")
-    private long tokenExpiration;
+    public JwtTokenUtil(JwtProperties jwtProperties) {
+        this.secretKey = jwtProperties.getSecret();
+        this.tokenExpiration = jwtProperties.getExpiration();
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));

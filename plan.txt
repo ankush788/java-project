@@ -1,11 +1,29 @@
-1. postgress driver , other jo undifne aa rha hai vo
-2. load balancer
-3. kafka setup
-4. rag
-// understand code (acche se (basic acche se clear hona chahiye) + document bana hai)
-multi threading  + dsa(always parallel)
-//isko acche karne ke baad hi sochna hai 
-
+Flow Diagram :-
+Incoming Request
+        ↓
+WebFlux Filter Chain
+(Spring Security Filters)
+        ↓
+DispatcherHandler
+        ↓
+(DispatcherHandler will  Check)
+        ↓
+ ┌──────────────────────────────┐
+ │ Local Controller Found ?     │
+ └──────────────────────────────┘
+        ↓ Yes                           ↓ No
+ Execute Controller             Check Gateway Route Mapping
+                                         ↓
+                           ┌────────────────────────┐
+                           │ Route Found ?          │
+                           └────────────────────────┘
+                                   ↓ Yes                 ↓ No
+                           Execute Gateway Filters       404
+                           (JWT / RateLimiter)
+                                   ↓
+                           Forward to Microservice
+                                   ↓
+                               Response
 
 overview :
 1: auth service (email , password ) : register , login 
@@ -14,8 +32,9 @@ overview :
 3. user managment 
    getAllUsers , getUserById , getUserByEmail , updateUser(only by id) , deleteUser(only by id)
 
-// work pending
-// add redis properly in auth service 
-// all cache class to userCache like  class   
-// covert redis template bug triage like userManagment
-// added cache to find bug by id in update functions for bug triag and user managment
+
+
+//pending
+// actuator ki test
+// learn spring cloud , webflux and spring security
+

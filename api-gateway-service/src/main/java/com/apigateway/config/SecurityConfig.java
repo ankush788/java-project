@@ -1,27 +1,53 @@
-package com.apigateway.config;
+package com.apigateway.config; // Package for security configuration
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean; // Used to create Spring beans
+import org.springframework.context.annotation.Configuration; // Marks class as configuration class
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity; // Enables WebFlux security
+import org.springframework.security.config.web.server.ServerHttpSecurity; // Used to configure security settings
+import org.springframework.security.web.server.SecurityWebFilterChain; // Represents security filter chain
 
+@Slf4j
 @Configuration
-@EnableWebFluxSecurity
+@EnableWebFluxSecurity // Enables Spring Security for WebFlux/Gateway
 public class SecurityConfig {
 
-    @Bean
+    @Bean // Registers this method return object as Spring bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        log.info("Initializing Spring Security filter chain for API Gateway");
+
         return http
+
+                // Disables CSRF protection for REST APIs
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+
+                // Disables default basic authentication popup
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+
+                // Disables Spring default login form
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+
+                // Disables default logout handling
                 .logout(ServerHttpSecurity.LogoutSpec::disable)
+
+                // Starts route authorization configuration
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/auth/**", "/gateway/health", "/actuator/health", "/actuator/info").permitAll()
-                        // JWT validation for protected downstream routes is handled by the custom gateway filter.
-                        .anyExchange().permitAll()
+
+                        // Allows these routes without authentication
+                        .pathMatchers(
+                                "/api/auth/**",
+                                "/api/users/**",
+                                "/api/bugs/**",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/gateway/validate-token"
+                        ).permitAll()
+                        // Block everything else (request which path is not known)
+                        .anyExchange().denyAll()
                 )
+
+                // Builds and returns security configuration
                 .build();
     }
 }
+

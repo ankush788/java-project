@@ -1,8 +1,8 @@
 package com.apigateway.filter.ratelimiter;
 
+import com.apigateway.config.RateLimitProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,22 +15,20 @@ public class RateLimiterManager {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final TokenBucketRateLimiter rateLimiter;
+    private final long defaultCapacity;
+    private final long defaultRefillRate;
+    private final long defaultWindowSeconds;
 
-    @Value("${rate-limit.default-capacity:100}")
-    private long defaultCapacity;
-
-    @Value("${rate-limit.default-refill-rate:10}")
-    private long defaultRefillRate;
-
-    @Value("${rate-limit.default-window-seconds:60}")
-    private long defaultWindowSeconds;
-
-    public RateLimiterManager(RedisTemplate<String, String> redisTemplate, 
-                            ObjectMapper objectMapper,
-                            TokenBucketRateLimiter rateLimiter) {
+    public RateLimiterManager(RedisTemplate<String, String> redisTemplate,
+                              ObjectMapper objectMapper,
+                              TokenBucketRateLimiter rateLimiter,
+                              RateLimitProperties rateLimitProperties) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.rateLimiter = rateLimiter;
+        this.defaultCapacity = rateLimitProperties.getDefaultCapacity();
+        this.defaultRefillRate = rateLimitProperties.getDefaultRefillRate();
+        this.defaultWindowSeconds = rateLimitProperties.getDefaultWindowSeconds();
     }
 
     public boolean isRequestAllowed(String userId) {

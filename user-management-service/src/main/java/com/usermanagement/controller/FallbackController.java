@@ -1,8 +1,7 @@
 package com.usermanagement.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,10 +16,9 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 // it for all  url which is invalid
+@Slf4j
 @RestController
 public class FallbackController {
-
-    private static final Logger log = LoggerFactory.getLogger(FallbackController.class);
 
     @RequestMapping(value = "/**", method = {
             RequestMethod.GET,

@@ -1,5 +1,6 @@
 package com.apigateway.filter.correlation;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -9,6 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class CorrelationIdFilter implements GlobalFilter {
 
@@ -16,10 +18,15 @@ public class CorrelationIdFilter implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        String incomingCorrelationId = exchange.getRequest().getHeaders().getFirst(CORRELATION_ID_HEADER);
-        String correlationId = (incomingCorrelationId == null || incomingCorrelationId.isBlank())
-                ? UUID.randomUUID().toString()
-                : incomingCorrelationId;
+        
+        String correlationId = UUID.randomUUID().toString();
+        String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+        String path = exchange.getRequest().getPath().value();
+        String remoteAddress = exchange.getRequest().getRemoteAddress() != null ? 
+                exchange.getRequest().getRemoteAddress().getAddress().getHostAddress() : "unknown";
+                
+            log.info("correlationId: {} - [CORRELATION RECEIVED] {} {} - from {}", correlationId, method, path, remoteAddress);
+        
 
         ServerHttpRequest request = exchange.getRequest()
                 .mutate()
@@ -29,9 +36,15 @@ public class CorrelationIdFilter implements GlobalFilter {
         exchange.getResponse().beforeCommit(() -> {
             exchange.getResponse().getHeaders().remove(CORRELATION_ID_HEADER);
             exchange.getResponse().getHeaders().set(CORRELATION_ID_HEADER, correlationId);
+            log.debug("correlationId: {} - [CORRELATION RESPONSE] Setting correlation header in response", correlationId);
             return Mono.empty();
         });
 
-        return chain.filter(exchange.mutate().request(request).build());
+        return chain.filter(exchange.mutate().request(request).build())
+                .doFinally(signalType -> {
+                    int statusCode = exchange.getResponse().getStatusCode() != null ? 
+                            exchange.getResponse().getStatusCode().value() : 0;
+                    log.info("correlationId: {} - [REQUEST COMPLETE] {} {} - Status: {}", correlationId, method, path, statusCode);
+                });
     }
 }

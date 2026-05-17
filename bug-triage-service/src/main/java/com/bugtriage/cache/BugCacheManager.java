@@ -1,10 +1,9 @@
 package com.bugtriage.cache;
 
 import com.bugtriage.dto.BugResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,10 +17,9 @@ import java.util.concurrent.TimeUnit;
  * 4. Store in cache
  * 5. Return data
  */
+@Slf4j
 @Component
 public class BugCacheManager {
-
-    private static final Logger log = LoggerFactory.getLogger(BugCacheManager.class);
 
     private final RedisTemplate<String, BugResponse> redisTemplate;
 

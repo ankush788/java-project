@@ -21,22 +21,27 @@ public class GatewayConfig {
         this.rateLimiterFilter = rateLimiterFilter;
     }
 
+    //RouteLocatorBuilder is a helper class in Spring Cloud Gateway used to create API Gateway routes.
+    //RouteLocator → final collection of all routes
+    //builder → used to define routes
+    // no need to add "apigateway controller" here because it is local for api gateway
     @Bean
     public RouteLocator customRoutes(RouteLocatorBuilder builder) {
+        log.info("Initializing API Gateway routes");
 
         return builder.routes()
 
-                // =========================
-                // PUBLIC ROUTES (NO JWT)
-                // =========================
+                // Route for authentication service
                 .route("auth-service", r -> r
+                        // Matches auth API paths
                         .path("/api/auth/**")
+                        .filters(f -> f
+                                // Applies rate limiter filter
+                                .filter(rateLimiterFilter.apply(rateLimiterConfig())))
+                        // Forwards request to auth service using load balancer
                         .uri("lb://AUTH-SERVICE")
                 )
 
-                // =========================
-                // USER SERVICE (PROTECTED)
-                // =========================
                 .route("user-service", r -> r
                 .path("/api/users/**")
                 .filters(f -> f
@@ -45,9 +50,7 @@ public class GatewayConfig {
                 )
                 .uri("lb://USER-MANAGEMENT-SERVICE")
                 )
-                // =========================
-                // BUG SERVICE (PROTECTED)
-                // =========================
+
                 .route("bug-service", r -> r
                         .path("/api/bugs/**")
                         .filters(f -> f
