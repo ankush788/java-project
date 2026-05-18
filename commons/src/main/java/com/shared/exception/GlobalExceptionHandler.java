@@ -1,9 +1,8 @@
-package com.authservice.exception;
+package com.shared.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,13 +20,28 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
 
+    /*
+     * Handles ResponseStatusException (thrown manually in service layer)
+     * Example:
+     *   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+     * Response:
+     *   400 Bad Request with message "Email already exists"
+     */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiError> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
         return buildErrorResponse(ex.getStatusCode(), ex.getReason(), request);
     }
 
+    /*
+     * Handles validation errors for @Valid @RequestBody (DTO validation)
+     * Example:
+     *   DTO has @NotBlank email, @Size(min=6) password
+     *   Request: { "email": "", "password": "123" }
+     * Response:
+     *   400 Bad Request with message:
+     *   "email must not be blank; password size must be at least 6"
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<String> fieldErrors = ex.getBindingResult().getFieldErrors()
@@ -39,6 +53,15 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
+    /*
+     * Handles type mismatch errors (wrong data type in path/query params)
+     * Example:
+     *   API: GET /users/{id} where id is Long
+     *   Request: /users/abc
+     * Response:
+     *   400 Bad Request with message:
+     *   "Invalid value 'abc' for parameter 'id'. Expected type: Long"
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         String message = String.format("Invalid value '%s' for parameter '%s'. Expected type: %s",
@@ -46,6 +69,16 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
+    /*
+     * Handles validation errors on @PathVariable and @RequestParam
+     * (requires @Validated on controller)
+     * Example:
+     *   @PathVariable @Min(1) Long id
+     *   Request: /users/0
+     * Response:
+     *   400 Bad Request with message:
+     *   "getUser.id must be greater than or equal to 1"
+     */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
         String message = ex.getConstraintViolations().stream()
@@ -54,6 +87,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
+    /*
+     * Handles all unhandled exceptions (fallback)
+     * Example:
+     *   NullPointerException, ArithmeticException, etc.
+     * Response:
+     *   500 Internal Server Error with generic message
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
@@ -71,13 +111,7 @@ public class GlobalExceptionHandler {
                 Instant.now().toString()
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        String correlationId = request.getHeader(CORRELATION_ID_HEADER);
-        if (correlationId != null && !correlationId.isBlank()) {
-            headers.set(CORRELATION_ID_HEADER, correlationId);
-        }
-
-        return new ResponseEntity<>(error, headers, status);
+        return new ResponseEntity<>(error, status);
     }
 
     private String formatFieldError(FieldError fieldError) {

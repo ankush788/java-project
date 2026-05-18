@@ -118,6 +118,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Shared Commons -->
+        <dependency>
+            <groupId>com.shared</groupId>
+            <artifactId>commons</artifactId>
+            <version>0.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>

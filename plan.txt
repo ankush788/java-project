@@ -35,6 +35,8 @@ overview :
 
 
 //pending
-// actuator ki test
 // learn spring cloud , webflux and spring security
+// remove the adding of  co-relation adding in globalException (but not from loggin) api gateway will do that
+// make the execption and use it as library 
+
 

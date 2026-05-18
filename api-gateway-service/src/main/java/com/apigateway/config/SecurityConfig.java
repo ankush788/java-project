@@ -39,7 +39,7 @@ public class SecurityConfig {
                                 "/api/users/**",
                                 "/api/bugs/**",
                                 "/actuator/health",
-                                "/actuator/info",
+                                "/actuator/metrics",
                                 "/gateway/validate-token"
                         ).permitAll()
                         // Block everything else (request which path is not known)

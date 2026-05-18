@@ -13,6 +13,8 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
+
+//AbstractGatewayFilterFactory : it used to create custom route-level gateway filters
 public class JwtValidationFilter extends AbstractGatewayFilterFactory<JwtValidationFilter.Config> {
 
     private final JwtTokenUtil jwtTokenUtil;

@@ -8,16 +8,16 @@ BASE_URL=http://localhost:8080
 
 ## Public Gateway Endpoints
 
-### Health Check
-```bash
-curl -X GET "http://localhost:8080/gateway/health"
-```
-
 ### Validate JWT Token
 ```bash
 curl -X POST "http://localhost:8080/gateway/validate-token" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
+
+## Actuator
+curl -X GET "http://localhost:8080/actuator/health"
+
+curl -X GET "http://localhost:8080/actuator/info"
 
 ## Auth Service Endpoints (No JWT Required)
 

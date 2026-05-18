@@ -6,7 +6,6 @@ import com.authservice.dto.TokenResponse;
 import com.authservice.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,20 +28,17 @@ public class AuthController {
     public ResponseEntity<TokenResponse> register(@RequestHeader("X-Correlation-ID") String correlationId,
                                                   @Valid @RequestBody RegisterRequest request) {
         log.info("correlationId: {} - POST /api/auth/register - Registering user", correlationId);
-        return withCorrelationIdHeader(correlationId, authService.register(correlationId, request));
+        TokenResponse response = authService.register(correlationId, request);
+        return ResponseEntity.ok().body(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@RequestHeader("X-Correlation-ID") String correlationId,
                                                @Valid @RequestBody LoginRequest request) {
         log.info("correlationId: {} - POST /api/auth/login - Logging in user", correlationId);
-        return withCorrelationIdHeader(correlationId, authService.login(correlationId, request));
-    }
-
-    private <T> ResponseEntity<T> withCorrelationIdHeader(String correlationId, T response) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Correlation-ID", correlationId);
-        return ResponseEntity.ok().headers(headers).body(response);
+        
+          TokenResponse response =  authService.login(correlationId, request);
+         return ResponseEntity.ok().body(response);
     }
 
 }

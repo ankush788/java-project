@@ -12,6 +12,8 @@ import java.util.UUID;
 
 @Slf4j
 @Component
+
+//GlobalFilter means: This filter runs for every gateway request
 public class CorrelationIdFilter implements GlobalFilter {
 
     private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
