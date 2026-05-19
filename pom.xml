@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Root Maven project -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- Maven POM format version -->
+    <!-- ❌ NOT inherited -->
+    <!-- Because this only tells Maven which POM schema format this file uses -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot parent configuration -->
+    <!-- ✅ INDIRECTLY inherited -->
+    <!-- Because child inherits THIS parent, and THIS parent already inherits Spring Boot parent -->
+    <!-- Child automatically gets Spring Boot dependency/plugin management -->
+    <parent>
+
+        <!-- Spring Boot organization -->
+        <groupId>org.springframework.boot</groupId>
+
+        <!-- Spring Boot parent POM -->
+        <artifactId>spring-boot-starter-parent</artifactId>
+
+        <!-- Spring Boot version -->
+        <version>3.5.14</version>
+
+        <!-- Download parent from Maven repo -->
+        <relativePath/>
+
+    </parent>
+
+    <!-- Organization/project namespace -->
+    <!-- ❌ NOT inherited -->
+    <!-- Child has its own identity -->
+    <groupId>com.microservices</groupId>
+
+    <!-- Parent project name -->
+    <!-- ❌ NOT inherited -->
+    <!-- Child has its own artifactId -->
+    <artifactId>project-parent</artifactId>
+
+    <!-- Parent project version -->
+    <!-- ❌ NOT inherited directly -->
+    <!-- Child has its own project version -->
+    <version>0.0.1-SNAPSHOT</version>
+
+    <!-- Parent-only configuration project -->
+    <!-- ❌ NOT inherited -->
+    <!-- Only tells Maven this project is configuration-only -->
+    <packaging>pom</packaging>
+
+    <!-- Human readable project name -->
+    <!-- ❌ NOT inherited -->
+    <name>project-parent</name>
+
+    <!-- Project description -->
+    <!-- ❌ NOT inherited -->
+    <description>Centralized parent POM for the microservices project</description>
+
+
+
+    <!-- Multi-module project configuration -->
+    <!-- ❌ NOT inherited -->
+    <!-- Only used by THIS parent project -->
+    <!-- Allows building all child projects together (order in which arrange building happen in same order) -->
+    <modules>
+
+        <!-- Child module folders -->
+        <module>commons</module>
+        <module>eureka-server</module>
+        <module>api-gateway-service</module>
+        <module>auth-service</module>
+        <module>user-management-service</module>
+        <module>bug-triage-service</module>
+
+    </modules>
+
+
+
+    <!-- Shared reusable variables -->
+    <!-- ✅ INHERITED -->
+    <!-- Because child projects automatically inherit parent properties -->
+    <!-- Used for centralized version management -->
+    <properties>
+
+        <!-- Global Java version -->
+        <!-- ✅ inherited -->
+        <java.version>21</java.version>
+
+        <!-- Compiler release version -->
+        <!-- ✅ inherited -->
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+
+        <!-- Source encoding -->
+        <!-- ✅ inherited -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Report encoding -->
+        <!-- ✅ inherited -->
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Spring Cloud version -->
+        <!-- ✅ inherited -->
+        <spring-cloud.version>2025.0.2</spring-cloud.version>
+
+        <!-- Shared commons version -->
+        <!-- ✅ inherited -->
+        <commons.version>1.0.0</commons.version>
+
+        <!-- JWT version -->
+        <!-- ✅ inherited -->
+        <jjwt.version>0.11.5</jjwt.version>
+
+        <!-- BCrypt version -->
+        <!-- ✅ inherited -->
+        <jbcrypt.version>0.4</jbcrypt.version>
+
+        <!-- Maven compiler plugin version -->
+        <!-- ✅ inherited -->
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+
+        <!-- Maven enforcer plugin version -->
+        <!-- ✅ inherited -->
+        <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
+
+        <!-- Unit test plugin version -->
+        <!-- ✅ inherited -->
+        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+
+        <!-- Integration test plugin version -->
+        <!-- ✅ inherited -->
+        <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
+
+    </properties>
+
+
+
+    <!-- Centralized dependency version management -->
+    <!-- ✅ INHERITED -->
+    <!-- Child gets dependency versions automatically -->
+    <!-- BUT dependency itself is NOT automatically added -->
+    <dependencyManagement>
+
+        <dependencies>
+
+            <!-- Spring Cloud BOM -->
+            <!-- ✅ inherited -->
+            <!-- Provides compatible versions for all Spring Cloud dependencies -->
+            <dependency>
+
+                <groupId>org.springframework.cloud</groupId>
+
+                <artifactId>spring-cloud-dependencies</artifactId>
+
+                <version>${spring-cloud.version}</version>
+
+                <!-- This dependency itself is another POM -->
+                <type>pom</type>
+
+                <!-- Import dependency versions -->
+                <scope>import</scope>
+
+            </dependency>
+
+            <!-- Shared commons library -->
+            <!-- ✅ inherited -->
+            <!-- Child can use commons without writing version -->
+            <dependency>
+
+                <groupId>com.shared</groupId>
+
+                <artifactId>commons</artifactId>
+
+                <version>${commons.version}</version>
+
+            </dependency>
+
+            <!-- JWT API dependency version -->
+            <!-- ✅ inherited -->
+            <dependency>
+
+                <groupId>io.jsonwebtoken</groupId>
+
+                <artifactId>jjwt-api</artifactId>
+
+                <version>${jjwt.version}</version>
+
+            </dependency>
+
+            <!-- JWT implementation dependency version -->
+            <!-- ✅ inherited -->
+            <dependency>
+
+                <groupId>io.jsonwebtoken</groupId>
+
+                <artifactId>jjwt-impl</artifactId>
+
+                <version>${jjwt.version}</version>
+
+            </dependency>
+
+            <!-- JWT Jackson serializer dependency version -->
+            <!-- ✅ inherited -->
+            <dependency>
+
+                <groupId>io.jsonwebtoken</groupId>
+
+                <artifactId>jjwt-jackson</artifactId>
+
+                <version>${jjwt.version}</version>
+
+            </dependency>
+
+            <!-- BCrypt dependency version -->
+            <!-- ✅ inherited -->
+            <dependency>
+
+                <groupId>org.mindrot</groupId>
+
+                <artifactId>jbcrypt</artifactId>
+
+                <version>${jbcrypt.version}</version>
+
+            </dependency>
+
+        </dependencies>
+
+    </dependencyManagement>
+
+
+
+    <!-- Build configuration -->
+    <build>
+
+
+
+        <!-- Centralized plugin version management -->
+        <!-- ✅ INHERITED -->
+        <!-- Child inherits plugin versions/configuration -->
+        <!-- BUT plugin itself is NOT automatically executed -->
+        <pluginManagement>
+
+            <plugins>
+
+                <!-- Java compiler plugin -->
+                <!-- ✅ inherited -->
+                <plugin>
+
+                    <groupId>org.apache.maven.plugins</groupId>
+
+                    <artifactId>maven-compiler-plugin</artifactId>
+
+                    <version>${maven-compiler-plugin.version}</version>
+
+                    <configuration>
+
+                        <!-- Compile project using Java 21 -->
+                        <release>${java.version}</release>
+
+                    </configuration>
+
+                </plugin>
+
+                <!-- Spring Boot build plugin -->
+                <!-- ✅ inherited -->
+                <plugin>
+
+                    <groupId>org.springframework.boot</groupId>
+
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+
+                    <configuration>
+
+                        <!-- Exclude dependencies from  jar -->
+                        <excludes>
+
+                            <!-- Remove Lombok from  jar (because it is needed at complie time and code 
+                            complie it is not needed at run time so, not taking it in jar) -->
+                            <exclude>
+
+                                <groupId>org.projectlombok</groupId>
+
+                                <artifactId>lombok</artifactId>
+
+                            </exclude>
+
+                        </excludes>
+
+                    </configuration>
+
+                </plugin>
+
+                <!-- Unit testing plugin -->
+                <!-- ✅ inherited -->
+                <plugin>
+
+                    <groupId>org.apache.maven.plugins</groupId>
+
+                    <artifactId>maven-surefire-plugin</artifactId>
+
+                    <version>${maven-surefire-plugin.version}</version>
+
+                </plugin>
+
+                <!-- Integration testing plugin -->
+                <!-- ✅ inherited -->
+                <plugin>
+
+                    <groupId>org.apache.maven.plugins</groupId>
+
+                    <artifactId>maven-failsafe-plugin</artifactId>
+
+                    <version>${maven-failsafe-plugin.version}</version>
+
+                </plugin>
+
+            </plugins>
+
+        </pluginManagement>
+
+
+        <!-- plugin are tool which help maven to do task ex:- complie, run-->
+        <!-- Plugins directly executed in THIS parent build -->
+        <!-- ⚠️ MOSTLY NOT inherited automatically -->
+        <!-- Used mainly for parent project build lifecycle -->
+        <plugins>
+
+            <!-- Maven Enforcer plugin -->
+            <!-- Validates environment before build -->
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-enforcer-plugin</artifactId>
+
+                <version>${maven-enforcer-plugin.version}</version>
+
+                <executions>
+
+                    <execution>
+
+                        <!-- Execution identifier -->
+                        <id>enforce-build-environment</id>
+
+                        <goals>
+
+                            <!-- Run validation -->
+                            <goal>enforce</goal>
+
+                        </goals>
+
+                        <configuration>
+
+                            <rules>
+
+                                <!-- Require minimum Java version -->
+                                <requireJavaVersion>
+
+                                    <!-- Java 21 or higher -->
+                                    <version>[21,)</version>
+
+                                </requireJavaVersion>
+
+                                <!-- Require minimum Maven version -->
+                                <requireMavenVersion>
+
+                                    <!-- Maven 3.9 or higher -->
+                                    <version>[3.9,)</version>
+
+                                </requireMavenVersion>
+
+                            </rules>
+
+                        </configuration>
+
+                    </execution>
+
+                </executions>
+
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>
