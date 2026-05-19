@@ -1,105 +1,190 @@
 package com.shared.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.validation.FieldError;
+
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
-
-import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)  // it excute this exception handler first then other expection handler and even spring expection handler of microservice in which "commmon" dependency is used
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-
     /*
-     * Handles ResponseStatusException (thrown manually in service layer)
-     * Example:
-     *   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
-     * Response:
-     *   400 Bad Request with message "Email already exists"
+     * Handles manually thrown ResponseStatusException
      */
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiError> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
-        return buildErrorResponse(ex.getStatusCode(), ex.getReason(), request);
+    public ResponseEntity<ApiError> handleResponseStatusException(
+            ResponseStatusException ex,
+            HttpServletRequest request
+    ) {
+
+        String correlationId = getCorrelationId(request);
+
+        log.warn(
+                "ResponseStatusException | correlationId={} | status={} | message={} | path={}",
+                correlationId,
+                ex.getStatusCode(),
+                ex.getReason(),
+                request.getRequestURI()
+        );
+
+        return buildErrorResponse(
+                ex.getStatusCode(),
+                ex.getReason(),
+                request
+        );
     }
 
     /*
-     * Handles validation errors for @Valid @RequestBody (DTO validation)
-     * Example:
-     *   DTO has @NotBlank email, @Size(min=6) password
-     *   Request: { "email": "", "password": "123" }
-     * Response:
-     *   400 Bad Request with message:
-     *   "email must not be blank; password size must be at least 6"
+     * Handles @Valid DTO validation failures
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        List<String> fieldErrors = ex.getBindingResult().getFieldErrors()
+    public ResponseEntity<ApiError> handleValidationException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+
+        String correlationId = getCorrelationId(request);
+
+        List<String> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
                 .stream()
                 .map(this::formatFieldError)
                 .collect(Collectors.toList());
 
         String message = String.join("; ", fieldErrors);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
+
+        log.warn(
+                "Validation failed | correlationId={} | message={} | path={}",
+                correlationId,
+                message,
+                request.getRequestURI()
+        );
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                message,
+                request
+        );
     }
 
     /*
-     * Handles type mismatch errors (wrong data type in path/query params)
-     * Example:
-     *   API: GET /users/{id} where id is Long
-     *   Request: /users/abc
-     * Response:
-     *   400 Bad Request with message:
-     *   "Invalid value 'abc' for parameter 'id'. Expected type: Long"
+     * Handles invalid path/query parameter types
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-        String message = String.format("Invalid value '%s' for parameter '%s'. Expected type: %s",
-                ex.getValue(), ex.getName(), ex.getRequiredType().getSimpleName());
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
+    public ResponseEntity<ApiError> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request
+    ) {
+
+        String correlationId = getCorrelationId(request);
+
+        String expectedType = ex.getRequiredType() != null
+                ? ex.getRequiredType().getSimpleName()
+                : "Unknown";
+
+        String message = String.format(
+                "Invalid value '%s' for parameter '%s'. Expected type: %s",
+                ex.getValue(),
+                ex.getName(),
+                expectedType
+        );
+
+        log.warn(
+                "MethodArgumentTypeMismatchException | correlationId={} | message={} | path={}",
+                correlationId,
+                message,
+                request.getRequestURI()
+        );
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                message,
+                request
+        );
     }
 
     /*
-     * Handles validation errors on @PathVariable and @RequestParam
-     * (requires @Validated on controller)
-     * Example:
-     *   @PathVariable @Min(1) Long id
-     *   Request: /users/0
-     * Response:
-     *   400 Bad Request with message:
-     *   "getUser.id must be greater than or equal to 1"
+     * Handles @Validated validation failures
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
-        String message = ex.getConstraintViolations().stream()
-                .map(violation -> violation.getPropertyPath() + " " + violation.getMessage())
+    public ResponseEntity<ApiError> handleConstraintViolation(
+            ConstraintViolationException ex,
+            HttpServletRequest request
+    ) {
+
+        String correlationId = getCorrelationId(request);
+
+        String message = ex.getConstraintViolations()
+                .stream()
+                .map(v -> v.getPropertyPath() + " " + v.getMessage())
                 .collect(Collectors.joining("; "));
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
+
+        log.warn(
+                "ConstraintViolationException | correlationId={} | message={} | path={}",
+                correlationId,
+                message,
+                request.getRequestURI()
+        );
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                message,
+                request
+        );
     }
 
     /*
-     * Handles all unhandled exceptions (fallback)
-     * Example:
-     *   NullPointerException, ArithmeticException, etc.
-     * Response:
-     *   500 Internal Server Error with generic message
+     * Fallback handler
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleAllExceptions(Exception ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
+    public ResponseEntity<ApiError> handleAllExceptions(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+
+        String correlationId = getCorrelationId(request);
+
+        log.error(
+                "Unhandled exception | correlationId={} | path={}",
+                correlationId,
+                request.getRequestURI(),
+                ex
+        );
+
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred",
+                request
+        );
     }
 
-    private ResponseEntity<ApiError> buildErrorResponse(HttpStatusCode status, String message, HttpServletRequest request) {
+    private ResponseEntity<ApiError> buildErrorResponse(
+            HttpStatusCode status,
+            String message,
+            HttpServletRequest request
+    ) {
+
         String reason = (status instanceof HttpStatus httpStatus)
                 ? httpStatus.getReasonPhrase()
                 : status.toString();
@@ -111,12 +196,57 @@ public class GlobalExceptionHandler {
                 Instant.now().toString()
         );
 
-        return new ResponseEntity<>(error, status);
+        return ResponseEntity
+                .status(status)
+                .body(error);
+    }
+
+
+        @ExceptionHandler(NoResourceFoundException.class)
+        public ResponseEntity<ApiError> handleNoResourceFoundException(
+                NoResourceFoundException ex,
+                HttpServletRequest request
+        ) {
+
+        String correlationId = getCorrelationId(request);
+
+        log.warn(
+                "NoResourceFoundException | correlationId={} | path={}",
+                correlationId,
+                request.getRequestURI()
+        );
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                "API not exist",
+                request
+        );
+        }
+    private String getCorrelationId(HttpServletRequest request) {
+
+        String correlationId = request.getHeader("correlation_id");
+
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = request.getHeader("X-Correlation-ID");
+        }
+
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = request.getHeader("X-Correlation-Id");
+        }
+
+        return (correlationId == null || correlationId.isBlank())
+                ? "N/A"
+                : correlationId;
     }
 
     private String formatFieldError(FieldError fieldError) {
         return fieldError.getField() + " " + fieldError.getDefaultMessage();
     }
 
-    public record ApiError(int status, String error, String message, String timestamp) {}
+    public record ApiError(
+            int status,
+            String error,
+            String message,
+            String timestamp
+    ) {}
 }
