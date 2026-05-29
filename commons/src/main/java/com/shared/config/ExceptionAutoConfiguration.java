@@ -1,9 +1,14 @@
 package com.shared.config;
 
+import com.shared.exception.GlobalExceptionHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
 
 @AutoConfiguration
-@ComponentScan(basePackages = "com.shared.exception")
 public class ExceptionAutoConfiguration {
+
+    @Bean
+    public GlobalExceptionHandler globalExceptionHandler() {
+        return new GlobalExceptionHandler();
+    }
 }

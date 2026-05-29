@@ -1,31 +1,4 @@
-Flow Diagram :-
-Incoming Request
-        ↓
-WebFlux Filter Chain
-(Spring Security Filters)
-        ↓
-DispatcherHandler
-        ↓
-(DispatcherHandler will  Check)
-        ↓
- ┌──────────────────────────────┐
- │ Local Controller Found ?     │
- └──────────────────────────────┘
-        ↓ Yes                           ↓ No
- Execute Controller             Check Gateway Route Mapping
-                                         ↓
-                           ┌────────────────────────┐
-                           │ Route Found ?          │
-                           └────────────────────────┘
-                                   ↓ Yes                 ↓ No
-                           Execute Gateway Filters       404
-                           (JWT / RateLimiter)
-                                   ↓
-                           Forward to Microservice
-                                   ↓
-                               Response
-
-overview :
+\overview :
 1: auth service (email , password ) : register , login 
 2: bug service :
     createBug , getAllBugs , getBugById , updateBug(by id) , deletebug(by id) 
@@ -34,7 +7,8 @@ overview :
 
 
 
-//pending
-// learn spring cloud , webflux and spring security
-// library wala fix and learn how it happen 
+// 1. rbac
+// 2. cloud (aws) storing 
+// 3. utilize 
+
 
